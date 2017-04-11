@@ -1,0 +1,13 @@
+1	上传文件到linux服务器
+scp pip-9.0.1-py2.py3-none-any.whl scu1701@202.115.63.1:/public/home/scu1701
+多个文件间用空格隔开
+
+2	登录服务器
+ssh yhm@server_ip
+
+3 	查看内存和cpu
+查看内存大小 free
+查看物理CPU个数：grep "physical id" /proc/cpuinfo|sort -u|wc -l
+查看逻辑CPU个数：cat /proc/cpuinfo |grep "processor"|sort -u|wc -l
+查看每个物理CPU内核个数：grep "cpu cores" /proc/cpuinfo|uniq
+查看每个物理CPU上逻辑CPU个数：grep "siblings" /proc/cpuinfo|uniq

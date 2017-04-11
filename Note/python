@@ -1,0 +1,148 @@
+1	引入本地模块
+新建directory “Code_test”,在该目录下新建两个文件"test1.py"  "test2.py"
+test1.py定义不同功能
+class test_class():
+    def fun1(str1):
+        print("fun1 of class1 from test1.py"+str1)
+    def fun2(str2):
+        print("fun2 of class1 from test1.py"+str2)
+def fun3(str3):
+    print("fun3 of test1.py"+str3)
+test2.py调用
+from Code_test.test1 import test_class#import class
+from Code_test.test1 import fun3#import func
+test_class.fun1("fun1")#fun of class
+fun3("fun3")#fun self
+
+2	格式化输出
+index=1
+line=2
+print "Line No %d - %s" % (index, line)
+
+3	读取csv文件
+方法一
+store = pd.read_csv(DATA_DIR + "store.csv")
+方法二
+import  csv
+with open("/home/wangtuntun/IJCAI/Rossman/Data/store.csv","rb") as csv_file:
+    reader=csv.reader(csv_file)
+    next(reader,None)#跳过文件的第一行
+    for row in reader:
+        print row[0]
+
+4	训练集测试集的划分
+方法一
+from sklearn.cross_validation import train_test_split
+# x_train,x_test,y_train,y_test=train_test_split(train_store,train_store["added_columns"],test_size=0.1,random_state=10)#random_state是随机数种子，保证每次运行程序时可以得到一样的结果。填0或者不填每次结果不一样。
+方法二
+# import random
+# bool_list = [random.random() >= .2 for _ in range(0, len(train_org))]
+# train = train_org[bool_list]#通过bool_list划分测试集和验证集，训练集大概有80%。为什么不用下面的方法呢？
+# test = train_org[[not item for item in bool_list]]#通过这么复杂麻烦的方法划分训练集和测试集，你觉得快乐吗？#这个test是用来预测的。
+
+5	pickle
+为什么不存入文件？python的pickle模块实现了基本的数据序列和反序列化。通过pickle模块的序列化操作我们能够将程序中运行的对象信息保存到文件中去，永久存储；通过pickle模块的反序列化操作，我们能够从文件中创建上一次程序保存的对象。
+也就是说，dump的时候，你存储的是个list。当执行load方法时， 返回的也是list。不必再次进行数据的转换。
+x = []#所有的训练特征
+y = []#所有的目标值
+pickle.dump(x, open(CLEANED_DATA_DIR + "x.pkl", 'wb'))#看来list是完全按照添加顺序来的，所以可以直接存入文件，不担心特征和目标不匹配
+pickle.dump(y, open(CLEANED_DATA_DIR + "y.pkl", 'wb'))
+x = pickle.load(open(CLEANED_DATA_DIR + "x.pkl", 'rb'))
+y = pickle.load(open(CLEANED_DATA_DIR + "y.pkl", 'rb'))
+
+6	时间操作
+import time
+a="2016-12-7"
+x=time.strptime(a,'%Y-%m-%d')
+print x.tm_year
+print x.tm_mon
+print x.tm_mday
+print  x.tm_wday + 1 #从0开始
+
+import datetime
+from datetime import timedelta
+SIX_WEEKS = timedelta(days=42)
+start_time_str="2015-07-01"
+end_time_str="2016-10-30"
+start_time=datetime.datetime.strptime(start_time_str,'%Y-%m-%d')
+#datetime.datetime.strptime(dtstr, "%Y-%m-%d %H:%M:%S").date()
+end_time=datetime.datetime.strptime(end_time_str,'%Y-%m-%d')
+delta=end_time - start_time
+print start_time,end_time,delta
+for day in range(0,487):
+    next_day=start_time + timedelta(days=day)
+    print next_day.date()
+
+7	list转为array
+list1=[[1,2,3],[4,5,6]]
+array1=np.array(list1)
+print array1[0][0]
+
+8	list连接两个不同类型的list
+list1=[1]
+list1.append(2)
+list2=["3","4"]
+list3=list1 + list2
+print type(list3[3])
+
+9	连接两个list
+list1=[1,2,3]
+list2=[4,5,6]
+list3=zip(list1,list2)
+
+10	调用API判断是否为假期
+def get_date_list(start, end, toFormat):
+    date_list = []
+    date = datetime.datetime.strptime(start, '%Y-%m-%d')
+    end = datetime.datetime.strptime(end, '%Y-%m-%d')
+    while date <= end:
+        date_list.append(date.strftime(toFormat))
+        date = date + datetime.timedelta(1)
+    return date_list
+
+## api获取假期特征
+def isHoliday(date):
+    return requests.get('http://www.easybots.cn/api/holiday.php?d=%s'%date).content
+
+if __name__ == '__main__':
+    content = isHoliday(','.join(get_date_list('2015-07-01','2016-11-14','%Y%m%d')))#返回一个json格式的字符串
+    content_json=json.loads(content)
+    print content_json['20150701']
+
+11	字符串转json
+	import json
+	json_object=json.loads(json_str)
+	print json_object[key]
+
+12	判断某个值是否在list中
+v1=10
+list1=[1,2,3,10]
+if v1 in list1:
+    print "yes"
+
+13	获取当前时间
+import time
+print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
+
+14	读取csv文件
+import csv
+    csv_reader = csv.reader(open(dealed_data_dir + '234month_type4.csv'))
+    raw_list = []
+    for row in csv_reader:
+        raw_list.append(row)
+当然pandas.read_csv()也可以
+
+14	字典按照key排序
+day_flow_dict=sorted(day_flow_dict.items())
+for ele in day_flow_dict:
+    print ele
+
+
+15	判断是否为空
+   import math
+        if math.isnan(sex):
+            sex="0"
+        else:
+            sex=str(int(sex))
+
+16

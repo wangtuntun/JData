@@ -1,0 +1,94 @@
+#encoding=utf-8
+import pandas as pd
+#读取train数据
+# train_types={"Store":np.dtype(int),"DayOfWeek":np.dtype(int),"Sales":np.dtype(int),"Customers":np.dtype(int),"Open":np.dtype(int),"Promo":np.dtype(int),
+#              "SchoolHoliday":np.dtype(int)}#Date 字段是date类型，不知道怎么说明.staet_holiday有些填充的是a字母，所以不能全部定义类型
+train_types={"Store":int,"DayOfWeek":int,"Sales":int,"Customers":int,"Open":int,"Promo":int,
+             "SchoolHoliday":int}#Date 字段是date类型，不知道怎么说明.staet_holiday有些填充的是a字母，所以不能全部定义类型
+train=pd.read_csv("/home/wangtuntun/IJCAI/Rossman/Data/train.csv", parse_dates=[2], dtype=train_types)#parse_dates表面有的列的数据类型是datet，可以直接将其转换为datetime
+#但是好像，如果原来的文件里面就有列名，dtype= 这个就不管用了？？
+
+# #取指定的数据
+# #train["Date"]=train["Date"].astype(str)#将列的数据类型进行改变
+# store_date=train["Date"]
+# date_samples=store_date.head(10)
+# date_sample=date_samples[0]
+# # print date_sample,date_sample.day,type(date_sample)#date的类型是timestamp
+# print type(date_sample)
+
+#过滤
+参考博客 http://www.cnblogs.com/CQ-LQJ/p/4909920.html
+# filter_train=train[train["Store"] > 10 ]
+df_obj[df_obj['用户号码'].isin(alist)] #获取匹配结果为ture的行
+
+#删除重复的行
+data.drop_duplicates()#所有字段完全重复才会被删除
+data.drop_duplicates(['k2'])#只要k2字段出现重复就删除
+
+#查看各行的数据格式
+#df_obj.dtypes
+
+#读取store文件
+store_types={"Store":int,"StoreType":str,"Assortment":str,"CompetitionDistance":int,"CompetitionOpenSinceMonth":int,
+             "CompetitionOpenSinceYear":int,"Promo2":int,"Promo2SinceWeek":int,"Promo2SinceYear":int,"PromoInterval":str}
+# store=pd.read_csv("/home/wangtuntun/IJCAI/Rossman/Data/store.csv",dtype=store_types)#如果直接这样的话，会提示NA无法转成int。因为有些内容是空的。
+store=pd.read_csv("/home/wangtuntun/IJCAI/Rossman/Data/store.csv")
+
+#填充
+# store.fillna("0",inplace=True)#添加inplace选项，可以直接修改源df
+# store.fillna({"Promo2SinceWeek":"aaa","Promo2SinceYear":"bbb"},inplace=True)#如果需要对不同的列进行不同的填充，可以用这个
+
+#修改
+# store.Promo2SinceWeek.replace({"0":"ccc"},inplace=True)#将这个df的某列的值进行替换
+
+#返回指定的行和列
+http://blog.csdn.net/xiaodongxiexie/article/details/53108959   参考博客
+# sinceweek=store["Promo2SinceWeek"].tolist()#如果选取某列，返回的数据类型是series，可以通过tolist方法转为list
+# print df1.icol(0)#如果不知道列名
+# print df1.ix[:,[0,1,2]] #返回指定多列
+# print df1.ix[:,0:2] #返回连续几个列
+# print df1.ix[1:2,2:4]  #选择第2-3行，3-5（不包括5）列的值
+# print df1.ix[1:3,[0,2]]  #选择第2-4行第1、3列的值
+# print df1.ix[:,"user_id":"time"]
+# print df1.ix[0:5:,] #返回0-5行
+
+
+
+#两个df的合并（按照列   按照行）
+train_store=train.merge(store,on="Store",how="inner")#按照store作为key进行连接，连接方式为内连接
+df1=pd.read_csv("/home/wangtuntun/JData/Data/Dealed/test_type4.csv")
+df2=pd.read_csv("/home/wangtuntun/JData/Data/Dealed/train_type4.csv")
+df3 = df1.append(df2,ignore_index=True)#将df2中的数据追加到df1的最后一行后面，并忽略原来df2的index
+print df3
+
+#按照列进行排序
+#train_store2=train_store.sort_values(by=["Store","Date"])
+
+#添加新的列
+# train_store["added_columns"]=1#可以跳过这种方式直接添加一列
+
+#删除某列
+#test_csv.drop("Id",axis=1,inplace=True)
+
+#对df的每一行进行处理
+# train["Date_str"]=train["Date"].astype(str)
+# train["Year_map"]=train["Date_str"].map(lambda x:x.split("-")[0])
+# train["Year_apply"]=train["Date_str"].apply(lambda x:x.split("-")[0])
+# data['StateHolidayA'] = 0
+# data['StateHolidayB'] = 0
+# data['StateHolidayC'] = 0
+# data.loc[data['StateHoliday'] == 'a', 'StateHolidayA'] = '1'  #df.loc[筛选条件,列名]=value
+# data.loc[data['StateHoliday'] == 'b', 'StateHolidayB'] = '1'
+# data.loc[data['StateHoliday'] == 'c', 'StateHolidayC'] = '1'
+
+#生成一个新的df
+# new_df=pd.DataFrame({"id":store["Store"],"StoreType":store["StoreType"]})
+
+#df直接写入文件
+# new_df.to_csv("/home/wangtuntun/df_save_test.csv",index=False)#默认index=True.这样文件中会多出index一列，是df的index。
+#存入文件的时候，不是按照df原来的顺序，会按照df的key进行排序存储
+
+# dataframe 和 array 互相转换
+df1=pd.read_csv("file_test")
+array1=pd.np.array(df1)
+df2=pd.DataFrame(array1)
