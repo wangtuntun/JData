@@ -54,5 +54,50 @@ def filter_with_product_skuid():
 def remove_duplicate_record():
     return
 
+#将user表中的age字段进行处理，首先去除汉字“岁”，并把年龄段改为具体数字。
+#缺省年龄-1,变为0; 16-25->1  26-35->2 36-45->3 46-55->4  56以上->5
+def clean_user_info():
+    import re
+    user_path=data_dir + "JData_User.csv"
+    result_path=data_dir + "JData_User2.csv"
+    data=pd.read_csv(user_path)
+    data.fillna(0)
+    data_list=np.array(data)
+    new_data_list=[]
+    for row in data_list:
+        new_age=0
+        temp_list=[]
+        temp_list.append(int(row[0]))
+        age=row[1]
+        temp_list
+        age=re.sub("\D", "", str(age))
+        if age == "1":
+            new_age=0
+        if age == "1625":
+            new_age=1
+        if age == "2635":
+            new_age=2
+        if age == "3645":
+            new_age=3
+        if age == "4655":
+            new_age=4
+        if age =="56":
+            new_age=5
+        sex=row[2]
+        import math
+        if math.isnan(sex):
+            sex=0
+        else:
+            sex=int(sex)
 
-filter_with_product_skuid()
+        temp_list.append(new_age)
+        temp_list.append(sex)
+        temp_list.append(int(row[3]))
+        temp_list.append(str(row[4]))
+        new_data_list.append(temp_list)
+    # for ele in new_data_list:
+    #     print(ele)
+    new_df=pd.DataFrame(new_data_list,columns=["user_id","age","sex","user_lv_cd","user_reg_dt"])
+    new_df.to_csv(result_path,index=False)
+
+clean_user_info()
