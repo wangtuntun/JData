@@ -153,3 +153,25 @@ def get_day_sales():
     for ele in day_flow_dict:
         print(ele)
     return
+'''
+统计在action表中，有哪些skuid，userid。
+本地运行时间一分钟
+all userid 105321
+userid in action 104740
+all skuid 24186
+skuid in action 3938
+skuid相差太大，之前就过滤过一次，只保留skuid出现在product表中。当时没对product表进行过滤。
+为了减少代码的运行时间，要对product表进行过滤，只保留出现在action表中的sku的信息
+'''
+def get_skuid_userid_in_action():
+    user_info=pd.read_csv(data_dir+"JData_User.csv")
+    userid_list=set(user_info["user_id"].tolist())
+    sku_info=pd.read_csv(data_dir+"JData_Product.csv")
+    skuid_list=set(sku_info["sku_id"].tolist())
+    action_info=pd.read_csv(dealed_data_dir+"234month_skuid_filtered.csv")
+    userid_in_action=set(action_info["user_id"].tolist())
+    skuid_in_action=set(action_info["sku_id"].tolist())
+    print("all userid"+str(len(userid_list)))
+    print("userid in action"+str(len(userid_in_action)))
+    print("all skuid" + str(len(skuid_list)))
+    print("skuid in action" + str(len(skuid_in_action)))
