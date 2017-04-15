@@ -99,5 +99,11 @@ def clean_user_info():
     #     print(ele)
     new_df=pd.DataFrame(new_data_list,columns=["user_id","age","sex","user_lv_cd","user_reg_dt"])
     new_df.to_csv(result_path,index=False)
-
-clean_user_info()
+#对produc表进行过滤，只保留出现在action中的数据
+def filter_produc_by_action():
+    product_info=pd.read_csv(data_dir+"JData_Product.csv")
+    action_info=pd.read_csv(dealed_data_dir+"234month_skuid_filtered.csv")
+    skuid_in_action=set(action_info["sku_id"].tolist())
+    product_info=product_info[product_info["sku_id"].isin(skuid_in_action)]
+    product_info.to_csv(data_dir+"JData_Product2.csv")
+filter_produc_by_action()
