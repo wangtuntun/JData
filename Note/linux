@@ -16,5 +16,4 @@ ssh yhm@server_ip
 #PBS -q low
 /public/home/scu1701//anaconda3/bin/python /public/home/scu1701/JData/Code/rf.py
 
-5
 
