@@ -11,3 +11,10 @@ ssh yhm@server_ip
 查看逻辑CPU个数：cat /proc/cpuinfo |grep "processor"|sort -u|wc -l
 查看每个物理CPU内核个数：grep "cpu cores" /proc/cpuinfo|uniq
 查看每个物理CPU上逻辑CPU个数：grep "siblings" /proc/cpuinfo|uniq
+
+4   提交作业到计算节点
+#PBS -q low
+/public/home/scu1701//anaconda3/bin/python /public/home/scu1701/JData/Code/rf.py
+
+5
+
