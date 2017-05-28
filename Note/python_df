@@ -88,7 +88,7 @@ print df3
 # new_df.to_csv("/home/wangtuntun/df_save_test.csv",index=False)#默认index=True.这样文件中会多出index一列，是df的index。
 #存入文件的时候，不是按照df原来的顺序，会按照df的key进行排序存储
 
-# dataframe 和 array 互相转换
+## dataframe 和 array 互相转换
 df1=pd.read_csv("file_test")
 array1=pd.np.array(df1)
 df2=pd.DataFrame(array1)
