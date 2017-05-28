@@ -2,18 +2,18 @@
 '''
 在这里获得分数最高的top-k pair
 '''
-import numpy as np
+
 import pandas as pd
-from sklearn import ensemble, cross_validation
 import csv
-import time
+
 
 
 # data_dir="/public/home/scu1701/JData/Data2/"#server data path
 # dealed_data_dir="/public/home/scu1701/JData/DealedData2/"#server dealed data path
 data_dir="/home/wangtuntun/JData/Data/" #local data path
 dealed_data_dir="/home/wangtuntun/JData/DealedData/" #local dealed data path
-predict_info_path= dealed_data_dir + "predict_info.csv"
+# predict_info_path= dealed_data_dir + "balanced_rf_0410_predict_info.csv"
+predict_info_path= dealed_data_dir + "balanced_gbdt_0410_predict_info.csv"
 real_info_path= dealed_data_dir + "offline_predict_test_11_label.csv"
 def run_demo(k):
 
@@ -47,6 +47,7 @@ def run_demo(k):
         sku_id = row[1]
         prob1 = float(row[3])
         if prob1 >= user_max_pro_dict[user_id] and user_flag_dict[user_id] ==0 :
+        # if user_flag_dict[user_id] == 0:
             pair_pro_dict[(user_id,sku_id)]=prob1
             user_flag_dict[user_id] = 1
 
@@ -98,10 +99,34 @@ def run_demo(k):
     pre_pair_list=list(predicted_pair)
     pd.DataFrame(pre_pair_list,columns=["user_id","sku_id"]).to_csv("submit.csv",index=False)
 
-
-run_demo(900)
+for i in range(200,800):
+    run_demo(i)
+# run_demo(218)
+#rf
 # 400 (47, 3, 0.022530400266133538, 0.05241635687732342, 0.0026064291920069507)
 # 500 (33, 3, 0.022158248922575424, 0.05103092783505155, 0.0029097963142580016)
 # 800 (47, 3, 0.022530400266133538, 0.05241635687732342, 0.0026064291920069507)  ok
+
 # 900 (50, 3, 0.021919498277900584, 0.05102040816326531, 0.0025188916876574307)
 # 1000 (50, 3, 0.02027100326212346, 0.047021943573667714, 0.0024370430544272946)
+#banlanced_train_data
+# n_estimators,max_depth,oob_score,random_state=500,500,True,10
+# 317 (34, 2, 0.02877395042109218, 0.06880269814502529, 0.0020881186051367718) ok
+
+# n_estimators,max_depth,oob_score,random_state=1000,1000,True,10
+# 280 (33, 2, 0.029761743097568606, 0.07122302158273382, 0.0021208907741251323)
+# 310 (33, 2, 0.028287261226167287, 0.06757679180887372, 0.002094240837696335)
+
+# n_estimators,max_depth,oob_score,random_state=2000,2000,True,10
+#333 (35, 2, 0.028830761968113638, 0.0689655172413793, 0.0020742584526031943)
+
+#n_estimators,max_depth,oob_score,random_state=1000,1000,False,10
+# 280 (33, 2, 0.029761743097568606, 0.07122302158273382, 0.0021208907741251323)
+# 387 (38, 3, 0.029337240397352825, 0.06877828054298644, 0.0030432136335970784)
+
+# n_estimators,max_depth,oob_score,random_state=1000,1000,False,0
+# 218 (32, 3, 0.03305347462955598, 0.07773279352226721, 0.00326726203441516)
+
+#gbdt
+# params_GBDT = {'n_estimators': 500, 'max_depth': 10, 'min_samples_split': 2, "learning_rate": 0.01,"subsample": 0.6,"loss": "deviance", "random_state": 10}
+# 284 (35, 1, 0.0306351894982003, 0.07500000000000001, 0.0010586491636671608)

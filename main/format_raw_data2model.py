@@ -35,19 +35,22 @@ import time
 import datetime
 import math
 
-data_dir="/public/home/scu1701/JData/Data/"#server data path
-dealed_data_dir="/public/home/scu1701/JData/DealedData/"#server dealed data path
+data_dir="/public/home/scu1701/JData/Data2/"#server data path
+dealed_data_dir="/public/home/scu1701/JData/DealedData2/"#server dealed data path
 # data_dir="/home/wangtuntun/JData/Data/" #local data path
 # dealed_data_dir="/home/wangtuntun/JData/DealedData/" #local dealed data path
-raw_path1=dealed_data_dir + "train_model_01_label.csv"
-result_path1=dealed_data_dir + "train_model_01_label_formatted"
-raw_path2=dealed_data_dir + "train_model_11_label.csv"
-result_path2=dealed_data_dir + "train_model_11_label_formatted"
-raw_path3=dealed_data_dir + "predict_0410_data"
-result_path3=dealed_data_dir + "predict_0410_data_formatted"
-raw_path4=dealed_data_dir + "predict_0415_data"
-result_path4=dealed_data_dir + "predict_0415_data_formatted"
-
+# raw_path1=dealed_data_dir + "train_model_01_label.csv"
+# result_path1=dealed_data_dir + "train_model_01_label_formatted"
+# raw_path2=dealed_data_dir + "train_model_11_label.csv"
+# result_path2=dealed_data_dir + "train_model_11_label_formatted"
+# raw_path3=dealed_data_dir + "predict_0410_data"
+# result_path3=dealed_data_dir + "predict_0410_data_formatted"
+raw_path4=dealed_data_dir + "predict_0415_data_2"
+result_path4=dealed_data_dir + "predict_0415_data_formatted_2"
+# raw_path5=dealed_data_dir + "all_feature_11_label_balanced.csv"
+# result_path5=dealed_data_dir +"all_feature_11_label_balanced_formatted.csv"
+# raw_path6=dealed_data_dir + "all_feature_01_label_balanced.csv"
+# result_path6=dealed_data_dir +"all_feature_01_label_balanced_formatted.csv"
 age_range=[0, 1, 2, 3, 4, 5]
 sex_range=[0, 1, 2]
 user_lv_cd_range=[1, 2, 3, 4, 5]
@@ -57,7 +60,8 @@ attr3_range=[-1, 1, 2]
 brand_range=[30, 48, 83, 88, 90, 124, 174, 200, 209, 211, 214, 244, 306, 328, 355, 375, 403, 427, 484, 489, 515, 545, 556, 562, 596, 622, 623, 655, 658, 677, 693, 717, 766, 790, 800, 801, 812, 857, 885, 916]
 comment_num_range=[0, 1, 2, 3, 4]
 
-month_range=[2,3,4]
+action_month_range=[2,3,4]
+all_month_range=[1,2,3,4,5,6,7,8,9,10,11,12]
 day_range=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31]
 
 def one_hot_code(number,number_range):
@@ -79,7 +83,7 @@ def format_data(file_path):
 
         action_date = datetime.datetime.strptime(action_date, '%Y-%m-%d')
         action_date_month,action_date_day=action_date.month,action_date.day
-        temp_list.extend(one_hot_code(action_date_month,month_range))#当前动作日期的月份
+        temp_list.extend(one_hot_code(action_date_month,action_month_range))#当前动作日期的月份
         temp_list.extend(one_hot_code(action_date_day, day_range))  # 当前动作日期的天数
 
         temp_list.extend(one_hot_code(age,age_range)) # age
@@ -92,7 +96,7 @@ def format_data(file_path):
             user_reg_dt = datetime.datetime.strptime("2016-02-01", '%Y-%m-%d')  # 在这儿报错，说user_reg_dt为空
             print(user_id)#317次
         reg_month,reg_day=user_reg_dt.month,user_reg_dt.day
-        temp_list.extend(one_hot_code(reg_month,month_range)) # user_reg_dt month
+        temp_list.extend(one_hot_code(reg_month,all_month_range)) # user_reg_dt month
         temp_list.extend(one_hot_code(reg_day, day_range))  # user_reg_dt day
 
         temp_list.extend(one_hot_code(attr1, attr1_range))  # attr1
@@ -126,8 +130,12 @@ print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
 # predict_0410_data_formatted_df=pd.DataFrame(predict_0410_data_formatted)
 # predict_0410_data_formatted_df.to_csv(result_path3,index=False,header=False)
 
-predict_0415_data_formatted=format_data(raw_path4)
-predict_0415_data_formatted_df=pd.DataFrame(predict_0415_data_formatted)
-predict_0415_data_formatted_df.to_csv(result_path4,index=False,header=False)
+# predict_0415_data_formatted=format_data(raw_path4)
+# predict_0415_data_formatted_df=pd.DataFrame(predict_0415_data_formatted)
+# predict_0415_data_formatted_df.to_csv(result_path4,index=False,header=False)
+
+balanced_train_data_formatted=format_data(raw_path4)
+balanced_train_data_formatted_df=pd.DataFrame(balanced_train_data_formatted)
+balanced_train_data_formatted_df.to_csv(result_path4,index=False,header=False)
 
 print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))

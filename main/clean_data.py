@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import datetime
 from datetime import timedelta
+from sklearn import cross_validation
 import time
 '''
 func：对数据进行一些基本的清洗
@@ -48,6 +49,20 @@ def filter_with_product_skuid():
     sum_filterd = sum_action2.sort_values(by=["user_id", "time", "sku_id"])
     sum_filterd.to_csv(filter_path,index=False)
 
+    print time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+
+def filter_4_with_product_skuid():
+    print time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+
+    action4_path = data_dir + "JData_Action_201604.csv"
+    product_path = data_dir + "JData_Product.csv"
+    filter_path = dealed_data_dir + "4month_skuid_filtered.csv"
+
+    action4 = pd.read_csv(action4_path)
+    product=pd.read_csv(product_path)
+    sku_in_product=product["sku_id"].tolist()
+    action4_filtered = action4[action4["sku_id"].isin(sku_in_product)]
+    action4_filtered.to_csv(filter_path,index=False)
     print time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
 
 #过滤掉重复的记录
@@ -105,5 +120,19 @@ def filter_produc_by_action():
     action_info=pd.read_csv(dealed_data_dir+"234month_skuid_filtered.csv")
     skuid_in_action=set(action_info["sku_id"].tolist())
     product_info=product_info[product_info["sku_id"].isin(skuid_in_action)]
-    product_info.to_csv(data_dir+"JData_Product2.csv")
-filter_produc_by_action()
+    product_info.to_csv(data_dir+"JData_Product2.csv",index=False)
+
+'''
+在所有的label中，label=1的只有千分之一。导致模型预测结果全部是0.这里取label=0的千分之一，使得差不多1：1
+取百分之一
+'''
+def filter_action_for_balance_label():
+    raw_data_path = dealed_data_dir + "234month_skuid_filtered.csv"
+    raw_data=pd.read_csv(raw_data_path)
+    neg_data = raw_data[raw_data["type"] != 4]
+    pos_data = raw_data[raw_data["type"] == 4]
+    neg_drop,neg_save=cross_validation.train_test_split(neg_data, test_size=0.1, random_state=10)
+    all_df=neg_save.append(pos_data,ignore_index=True)
+    all_df.to_csv(dealed_data_dir + "234month_skuid_filtered_100.csv",index=False)
+
+filter_4_with_product_skuid()
