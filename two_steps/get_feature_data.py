@@ -1,17 +1,23 @@
 #encoding=utf-8
-'''
-获取预测4/11-->4/15    以及 4/16-->4/20 的数据
-'''
 import pandas as pd
 import numpy as np
 import datetime
 import time
 from datetime import timedelta
 import csv
-data_dir="/public/home/scu1701/JData/Data/"#server data path
-dealed_data_dir="/public/home/scu1701/JData/DealedData/"#server dealed data path
-# data_dir="/home/wangtuntun/JData/Data/" #local data path
-# dealed_data_dir="/home/wangtuntun/JData/DealedData/" #local dealed data path
+'''
+得到所有特征
+1
+在考虑滑动特征的时候，训练数据可以得到前几天统计特征，但是未来预测数据是不知道的。比如4/17号不知道4/15和4/16两天一共的数据？
+一个解决办法是：预测的4/16---4/20全部用4/15的统计特征
+另外一个解决办法：特征中，不使用滑动特征
+最后看分数
+2
+skuid，userid都是id类型.好像通过pd.read_csv方法获取的，就默认是int型，不用可以转化为int
+能用int的不用string
+'''
+
+
 
 # 获取数据中包含的所有天
 def get_all_date():
@@ -60,9 +66,8 @@ def get_recent_days(last_day,return_days):
         return_list.append(str(next_day))
     return return_list,return_days
 
-def analize_feature():
-    import time
-    print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
+def get_feature():
+
 #------------------------------------------------------------读取文件信息------------------------------------------------#
     action_data_path = dealed_data_dir + "234month_skuid_filtered.csv"#234三个月所有以交互数据
     product_path = data_dir + "JData_Product2.csv"#商品信息     只保留出现在action表中的商品
@@ -82,11 +87,6 @@ def analize_feature():
     sku_id_list=product_data["sku_id"].tolist()#所有商品id
     user_id_list=user_data["user_id"].tolist()#所有用户id
 
-    filtered_user=pd.read_csv(data_dir+"JData_User2_active_filtered.csv")
-    filtered_userid=filtered_user["user_id"].tolist()
-    filtered_sku=pd.read_csv(data_dir+"JData_Product2_hot_filtered.csv")
-    filtered_skuid=filtered_sku["sku_id"].tolist()
-
 
 #-----------------------------------------------------------获取各种映射表-----------------------------------------------#
     #------------三张表的映射--------------------------#
@@ -104,8 +104,7 @@ def analize_feature():
     for row in comment_data_array:
         sku_id = int(row[1])
         date = row[0]
-        comment_info_dict[(sku_id, date)] = list(row[2:5])#这里有个细节没有处理，这里的date是截止到这个日期，有多少评论。但是在action中的date表示当天。意义不一样。
-                                                            #目前的做法是：直接在comment表中查找(skuid,actiondate)如果没有就按照0.0.0处理
+        comment_info_dict[(sku_id, date)] = list(row[2:5])
     #------------每个sku被动作-------------------------#
     # 初始化 商品每天被动作次数
     sku_day_buy_dict={}
@@ -410,124 +409,129 @@ def analize_feature():
             else:
                 pass
 
-#---------------------------------------遍历所有userid和skuid，生成4/11当天的数据-----------------------------------------#
-    # predict_0410_list=[]
-    predict_0415_list = []
-    for user_id in filtered_userid:
-        for sku_id in filtered_skuid:
-            print(user_id,sku_id)
-            # action_date="2016-04-10"
-            # predict_date="2016-04-11"
-            action_date = "2016-04-15"
-            predict_date = "2016-04-16"
-            temp_list=[]
-            temp_list.append(user_id)
-            temp_list.append(sku_id)
-            temp_list.append(predict_date)#这里放入的不是0410,而是0411
-            sku_info = product_info_dict[sku_id]  # 提示key error
-            user_info = user_info_dict[user_id]
-            comment_info = [0, 0, 0.0]  # 如果action表中，(sku_id,dt)对应的没有出现在comment表中，就用这个默认的进行填充
-            try:
-                comment_info = comment_info_dict[(sku_id, action_date)]  # 提示key error
-            except:
-                pass
-            temp_list.extend(user_info)
-            temp_list.extend(sku_info)
-            temp_list.extend(comment_info)
-            # 统计特征
-            sku_2days_buy = sku_2days_buy_dict[(sku_id, action_date)]
-            sku_2days_click = sku_2days_click_dict[(sku_id, action_date)]
-            sku_2days_add2car = sku_2days_add2car_dict[(sku_id, action_date)]
-            sku_2days_view = sku_2days_view_dict[(sku_id, action_date)]
-            temp_list.append(sku_2days_buy)
-            temp_list.append(sku_2days_click)
-            temp_list.append(sku_2days_add2car)
-            temp_list.append(sku_2days_view)
-
-            sku_2days_diff_user_buy = len(sku_2days_diff_user_buy_dict[(sku_id, action_date)])  # 这个没有取平均值，会造成截断误差
-            sku_2days_diff_user_click = len(sku_2days_diff_user_click_dict[(sku_id, action_date)])
-            sku_2days_diff_user_add2car = len(sku_2days_diff_user_add2car_dict[(sku_id, action_date)])
-            sku_2days_diff_user_view = len(sku_2days_diff_user_view_dict[(sku_id, action_date)])
-            temp_list.append(sku_2days_diff_user_buy)
-            temp_list.append(sku_2days_diff_user_click)
-            temp_list.append(sku_2days_diff_user_add2car)
-            temp_list.append(sku_2days_diff_user_view)
-
-            sku_5days_buy = sku_5days_buy_dict[(sku_id, action_date)]
-            sku_5days_click = sku_5days_click_dict[(sku_id, action_date)]
-            sku_5days_add2car = sku_5days_add2car_dict[(sku_id, action_date)]
-            sku_5days_view = sku_5days_view_dict[(sku_id, action_date)]
-            temp_list.append(sku_5days_buy)
-            temp_list.append(sku_5days_click)
-            temp_list.append(sku_5days_add2car)
-            temp_list.append(sku_5days_view)
-
-            sku_5days_diff_user_buy = len(sku_5days_diff_user_buy_dict[(sku_id, action_date)])
-            sku_5days_diff_user_click = len(sku_5days_diff_user_click_dict[(sku_id, action_date)])
-            sku_5days_diff_user_add2car = len(sku_5days_diff_user_add2car_dict[(sku_id, action_date)])
-            sku_5days_diff_user_view = len(sku_5days_diff_user_view_dict[(sku_id, action_date)])
-            temp_list.append(sku_5days_diff_user_buy)
-            temp_list.append(sku_5days_diff_user_click)
-            temp_list.append(sku_5days_diff_user_add2car)
-            temp_list.append(sku_5days_diff_user_view)
-
-            user_2days_click_skuid = user_2days_click_skuid_dict[(user_id, action_date)]
-            user_2days_add2car_skuid = user_2days_add2car_skuid_dict[(user_id, action_date)]
-            user_2days_view_skuid = user_2days_view_skuid_dict[(user_id, action_date)]
-            temp_list.append(user_2days_click_skuid)
-            temp_list.append(user_2days_add2car_skuid)
-            temp_list.append(user_2days_view_skuid)
-
-            user_5days_click_skuid = user_5days_click_skuid_dict[(user_id, action_date)]
-            user_5days_add2car_skuid = user_5days_add2car_skuid_dict[(user_id, action_date)]
-            user_5days_view_skuid = user_5days_view_skuid_dict[(user_id, action_date)]
-            temp_list.append(user_5days_click_skuid)
-            temp_list.append(user_5days_add2car_skuid)
-            temp_list.append(user_5days_view_skuid)
-
-            user_2days_diff_sku_click_skuid = len(user_2days_diff_sku_click_skuid_dict[(user_id, action_date)])
-            user_2days_diff_sku_add2car_skuid = len(user_2days_diff_sku_add2car_skuid_dict[(user_id, action_date)])
-            user_2days_diff_sku_view_skuid = len(user_2days_diff_sku_view_skuid_dict[(user_id, action_date)])
-            temp_list.append(user_2days_diff_sku_click_skuid)
-            temp_list.append(user_2days_diff_sku_add2car_skuid)
-            temp_list.append(user_2days_diff_sku_view_skuid)
-
-            user_5days_diff_sku_click_skuid = len(user_5days_diff_sku_click_skuid_dict[(user_id, action_date)])
-            user_5days_diff_sku_add2car_skuid = len(user_5days_diff_sku_add2car_skuid_dict[(user_id, action_date)])
-            user_5days_diff_sku_view_skuid = len(user_5days_diff_sku_view_skuid_dict[(user_id, action_date)])
-            temp_list.append(user_5days_diff_sku_click_skuid)
-            temp_list.append(user_5days_diff_sku_add2car_skuid)
-            temp_list.append(user_5days_diff_sku_view_skuid)
-
-            user_2days_diff_sku_click_brand = len(user_2days_diff_sku_click_brand_dict[(user_id, action_date)])
-            user_2days_diff_sku_add2car_brand = len(user_2days_diff_sku_add2car_brand_dict[(user_id, action_date)])
-            user_2days_diff_sku_view_brand = len(user_2days_diff_sku_view_brand_dict[(user_id, action_date)])
-            temp_list.append(user_2days_diff_sku_click_brand)
-            temp_list.append(user_2days_diff_sku_add2car_brand)
-            temp_list.append(user_2days_diff_sku_view_brand)
-
-            user_5days_diff_sku_click_brand = len(user_5days_diff_sku_click_brand_dict[(user_id, action_date)])
-            user_5days_diff_sku_add2car_brand = len(user_5days_diff_sku_add2car_brand_dict[(user_id, action_date)])
-            user_5days_diff_sku_view_brand = len(user_5days_diff_sku_view_brand_dict[(user_id, action_date)])
-            temp_list.append(user_5days_diff_sku_click_brand)
-            temp_list.append(user_5days_diff_sku_add2car_brand)
-            temp_list.append(user_5days_diff_sku_view_brand)
-
+#---------------------------------------遍历action表，将所有特征都加上，然后写入文件-----------------------------------------#
+    all_feature_list=[]
+    for row in action_data_array:
+        temp_list=[]
+        #action 表特征
+        user_id=row[0]
+        temp_list.append(user_id)
+        sku_id=row[1]
+        temp_list.append(sku_id)
+        action_date=str(row[2]).split(" ")[0].strip()
+        temp_list.append(action_date)
+        type=int(row[4])
+        label=-1
+        # label=0#好像是有的模型需要-1
+        if type==4:
             label=1
-            temp_list.append(label)
+        brand=row[6] #这个特征在商品信息表的时候再添加
+        #其他三个表特征
+        sku_info=product_info_dict[sku_id]
+        user_info=user_info_dict[user_id]
+        comment_info=[0,0,0.0]#如果action表中，(sku_id,dt)对应的没有出现在comment表中，就用这个默认的进行填充
+        try:
+            comment_info=comment_info_dict[(sku_id,action_date)]#提示key error
+        except:
+            pass
+        temp_list.extend(user_info)
+        temp_list.extend(sku_info)
+        temp_list.extend(comment_info)
+        #统计特征
+        sku_2days_buy=sku_2days_buy_dict[(sku_id,action_date)]
+        sku_2days_click = sku_2days_click_dict[(sku_id, action_date)]
+        sku_2days_add2car = sku_2days_add2car_dict[(sku_id, action_date)]
+        sku_2days_view = sku_2days_view_dict[(sku_id, action_date)]
+        temp_list.append(sku_2days_buy)
+        temp_list.append(sku_2days_click)
+        temp_list.append(sku_2days_add2car)
+        temp_list.append(sku_2days_view)
 
-            # predict_0410_list.append(temp_list)
-            predict_0415_list.append(temp_list)
+        sku_2days_diff_user_buy=len(sku_2days_diff_user_buy_dict[(sku_id,action_date)])#这个没有取平均值，会造成截断误差
+        sku_2days_diff_user_click = len(sku_2days_diff_user_click_dict[(sku_id, action_date)])
+        sku_2days_diff_user_add2car = len(sku_2days_diff_user_add2car_dict[(sku_id, action_date)])
+        sku_2days_diff_user_view = len(sku_2days_diff_user_view_dict[(sku_id, action_date)])
+        temp_list.append(sku_2days_diff_user_buy)
+        temp_list.append(sku_2days_diff_user_click)
+        temp_list.append(sku_2days_diff_user_add2car)
+        temp_list.append(sku_2days_diff_user_view)
+
+        sku_5days_buy = sku_5days_buy_dict[(sku_id, action_date)]
+        sku_5days_click = sku_5days_click_dict[(sku_id, action_date)]
+        sku_5days_add2car = sku_5days_add2car_dict[(sku_id, action_date)]
+        sku_5days_view = sku_5days_view_dict[(sku_id, action_date)]
+        temp_list.append(sku_5days_buy)
+        temp_list.append(sku_5days_click)
+        temp_list.append(sku_5days_add2car)
+        temp_list.append(sku_5days_view)
+
+        sku_5days_diff_user_buy = len(sku_5days_diff_user_buy_dict[(sku_id, action_date)])
+        sku_5days_diff_user_click = len(sku_5days_diff_user_click_dict[(sku_id, action_date)])
+        sku_5days_diff_user_add2car = len(sku_5days_diff_user_add2car_dict[(sku_id, action_date)])
+        sku_5days_diff_user_view = len(sku_5days_diff_user_view_dict[(sku_id, action_date)])
+        temp_list.append(sku_5days_diff_user_buy)
+        temp_list.append(sku_5days_diff_user_click)
+        temp_list.append(sku_5days_diff_user_add2car)
+        temp_list.append(sku_5days_diff_user_view)
+
+        user_2days_click_skuid=user_2days_click_skuid_dict[(user_id,action_date)]
+        user_2days_add2car_skuid = user_2days_add2car_skuid_dict[(user_id, action_date)]
+        user_2days_view_skuid = user_2days_view_skuid_dict[(user_id, action_date)]
+        temp_list.append(user_2days_click_skuid)
+        temp_list.append(user_2days_add2car_skuid)
+        temp_list.append(user_2days_view_skuid)
+
+        user_5days_click_skuid = user_5days_click_skuid_dict[(user_id, action_date)]
+        user_5days_add2car_skuid = user_5days_add2car_skuid_dict[(user_id, action_date)]
+        user_5days_view_skuid = user_5days_view_skuid_dict[(user_id, action_date)]
+        temp_list.append(user_5days_click_skuid)
+        temp_list.append(user_5days_add2car_skuid)
+        temp_list.append(user_5days_view_skuid)
 
 
-    # predict_0410_result_path = dealed_data_dir + "predict_0410_data"
-    # predict_0410_df=pd.DataFrame(predict_0410_list)
-    # predict_0410_df.to_csv(predict_0410_result_path,index=False)
+        user_2days_diff_sku_click_skuid=len(user_2days_diff_sku_click_skuid_dict[(user_id,action_date)])
+        user_2days_diff_sku_add2car_skuid = len(user_2days_diff_sku_add2car_skuid_dict[(user_id, action_date)])
+        user_2days_diff_sku_view_skuid = len(user_2days_diff_sku_view_skuid_dict[(user_id, action_date)])
+        temp_list.append(user_2days_diff_sku_click_skuid)
+        temp_list.append(user_2days_diff_sku_add2car_skuid)
+        temp_list.append(user_2days_diff_sku_view_skuid)
 
-    predict_0415_result_path = dealed_data_dir + "predict_0415_data"
-    predict_0415_df=pd.DataFrame(predict_0415_list)
-    predict_0415_df.to_csv(predict_0415_result_path,index=False)
+        user_5days_diff_sku_click_skuid = len(user_5days_diff_sku_click_skuid_dict[(user_id, action_date)])
+        user_5days_diff_sku_add2car_skuid = len(user_5days_diff_sku_add2car_skuid_dict[(user_id, action_date)])
+        user_5days_diff_sku_view_skuid = len(user_5days_diff_sku_view_skuid_dict[(user_id, action_date)])
+        temp_list.append(user_5days_diff_sku_click_skuid)
+        temp_list.append(user_5days_diff_sku_add2car_skuid)
+        temp_list.append(user_5days_diff_sku_view_skuid)
+
+        user_2days_diff_sku_click_brand = len(user_2days_diff_sku_click_brand_dict[(user_id, action_date)])
+        user_2days_diff_sku_add2car_brand = len(user_2days_diff_sku_add2car_brand_dict[(user_id, action_date)])
+        user_2days_diff_sku_view_brand = len(user_2days_diff_sku_view_brand_dict[(user_id, action_date)])
+        temp_list.append(user_2days_diff_sku_click_brand)
+        temp_list.append(user_2days_diff_sku_add2car_brand)
+        temp_list.append(user_2days_diff_sku_view_brand)
+
+        user_5days_diff_sku_click_brand = len(user_5days_diff_sku_click_brand_dict[(user_id, action_date)])
+        user_5days_diff_sku_add2car_brand = len(user_5days_diff_sku_add2car_brand_dict[(user_id, action_date)])
+        user_5days_diff_sku_view_brand = len(user_5days_diff_sku_view_brand_dict[(user_id, action_date)])
+        temp_list.append(user_5days_diff_sku_click_brand)
+        temp_list.append(user_5days_diff_sku_add2car_brand)
+        temp_list.append(user_5days_diff_sku_view_brand)
+
+
+        #label
+        temp_list.append(label)
+        all_feature_list.append(temp_list)
+    print(all_feature_list[0:10])
+    #将所有特征写入文件
+    all_feature_df=pd.DataFrame(all_feature_list)
+    # write_path = dealed_data_dir + "all_feature_11_label"
+    write_path = dealed_data_dir+"all_feature_11_label"
+    all_feature_df.to_csv(write_path,index=False)
+
 
     print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
-
-analize_feature()
+data_dir="/public/home/scu1701/JData/Data/"#server data path
+dealed_data_dir="/public/home/scu1701/JData/DealedData/"#server dealed data path
+# data_dir="/home/wangtuntun/JData/Data/" #local data path
+# dealed_data_dir="/home/wangtuntun/JData/DealedData/" #local dealed data path
+get_feature()
